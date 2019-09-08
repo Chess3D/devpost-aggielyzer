@@ -39,6 +39,37 @@ def binary_search():
             else:
                 currentPage += i
 
+
+# Pulls text and converts into txt file
+def pull_text(page):
+    html = urllib.request.urlopen(website + str(page)).read()
+    soup = BeautifulSoup(html, 'html.parser')
+    text = soup.get_text()
+
+    pageText = open('PageText.txt','w')
+    pageText.write(text)
+    pageText.write('\n')
+
+
+for page in range(2):
+    pull_text(page + 1)
+
+
+def extract_links(page):
+    html = urllib.request.urlopen(website + str(page)).read()
+    soup = BeautifulSoup(html, 'html.parser')
+    tags = soup.findAll('a')
+    keyphrase = "https://devpost.com/software/"
+    linkList = []
+
+    for t in tags:
+        text = t.attrs['href']
+        if text.find(keyphrase) != -1 and text.find('https://devpost.com/software/search?page=') == -1:
+            linkList.append(t.attrs['href'])
+    
+    return linkList
+
+
 # Formats a URL into the final usable data
 def format_page_text(url):
     html = urllib.request.urlopen(url)
@@ -56,6 +87,3 @@ def format_page_text(url):
     formatedText = formatedText.replace('\t', '')
 
     return '' + url + '\n' + formatedText + '\n'
-
-print(format_page_text('https://devpost.com/software/takeme2'))
-print(format_page_text('https://devpost.com/software/cryptotoken-access-your-credentials-marketplace'))
