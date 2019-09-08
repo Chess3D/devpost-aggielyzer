@@ -26,7 +26,7 @@ def binary_search():
     while True:
 
         while content_check(currentPage) == state:
-            print('Current Page:',currentPage, '\tPast Page:', pastPage, '\tState:', state)
+            #print('Current Page:',currentPage, '\tPast Page:', pastPage, '\tState:', state)
             
             if currentPage == pastPage:
                 return currentPage
@@ -43,7 +43,20 @@ def binary_search():
     return currentPage
 
 
-print(binary_search())
+#print(binary_search())
+
+def pull_text(page):
+    html = urllib.request.urlopen(website + str(page)).read()
+    soup = BeautifulSoup(html, 'html.parser')
+    text = soup.get_text()
+    print(text)
+
+    pageText = open("PageText.txt","w")
+    pageText.write(text)
+
+page = 1
+pull_text(page)
+    
 
 # Get the max page count
 # def get_page_count()
