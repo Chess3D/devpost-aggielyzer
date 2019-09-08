@@ -4,8 +4,8 @@ from bs4 import BeautifulSoup
 # Base website
 website = 'https://devpost.com/software/search?page='
 
-# Keyword looking to be found
-keyword = "Oh no! Looks like there's no software matching your query."
+# Keyphrase looking to be found
+boundsKeyphrase = "Oh no! Looks like there's no software matching your query."
 
 
 # Checks if the keyword is on the desired page
@@ -14,7 +14,7 @@ def content_check(page):
     soup = BeautifulSoup(html, 'html.parser')
     text = soup.get_text()
 
-    return text.find(keyword) != -1
+    return text.find(boundsKeyphrase) != -1
 
 
 # Preforms a binary search to find the last page
@@ -55,6 +55,7 @@ for page in range(2):
     pull_text(page + 1)
 
 
+# Gets all the relevant links from each page
 def extract_links(page):
     html = urllib.request.urlopen(website + str(page)).read()
     soup = BeautifulSoup(html, 'html.parser')
@@ -64,6 +65,7 @@ def extract_links(page):
 
     for t in tags:
         text = t.attrs['href']
+
         if text.find(keyphrase) != -1 and text.find('https://devpost.com/software/search?page=') == -1:
             linkList.append(t.attrs['href'])
     
@@ -87,3 +89,45 @@ def format_page_text(url):
     formatedText = formatedText.replace('\t', '')
 
     return '' + url + '\n' + formatedText + '\n'
+
+
+# Given a word and source file a count of the # of occurrences in stored in an array
+def get_keyword_count(keyword, srcFile):
+    file = open(srcFile, "r")
+    lines = file.readlines()
+
+    # Takes the input file and puts every word in its own index
+    for i in lines:
+        words = lines.split(" ")
+
+    # Array format: [ page_description_0, count0, page_description_1, count1, ... ]
+    pageCount = []
+    count = 0
+
+    # If currentWord equals keyWord count is incremented
+    # Else if 'page_description_text' is found in currentWord then it and count are appended to array
+    for currentWord in words:
+        if currentWord.lower() == keyword.lower():
+            count += 1
+        elif 'page_description_text_' in currentWord.lower():
+            pageCount.append(currentWord)
+            pageCount.append(count)
+            count = 0
+
+
+# Writes text file with the # of occurrences of keyWord in each different project
+def write_keyword_count(keyWord, list):
+    tempDescrip = ''
+    tempCount = 0
+    file = open('KeywordCount.txt', 'w')
+
+    # If j is an even number then it indicates a new Project
+    # Else i is count and the info is written to file
+    for i in pageCount and j in range(0, len(list)):
+        if j % 2 == 0 :
+            tempDescrip = i
+        else:
+            tempCount = i
+            file.write(tempDescrip, ': ', tempCount, '\n')
+
+    file.close()
