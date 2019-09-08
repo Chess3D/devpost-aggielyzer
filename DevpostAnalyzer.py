@@ -7,9 +7,6 @@ website = 'https://devpost.com/software/search?page='
 # Keyword looking to be found
 keyword = "Oh no! Looks like there's no software matching your query."
 
-# The last page with useful text
-lastPage = binary_search()
-
 
 # Checks if the keyword is on the desired page
 def content_check(page):
@@ -41,3 +38,24 @@ def binary_search():
                 currentPage -= i
             else:
                 currentPage += i
+
+# Formats a URL into the final usable data
+def format_page_text(url):
+    html = urllib.request.urlopen(url)
+    soup = BeautifulSoup(html, 'lxml')
+    tags = soup.findAll('p')
+    formatedText = ''
+    
+    for t in tags:
+        formatedText += t.text
+    
+    while formatedText.find('  ') != -1:
+        formatedText = formatedText.replace('  ', ' ')
+
+    formatedText = formatedText.replace('\n', '')
+    formatedText = formatedText.replace('\t', '')
+
+    return '' + url + '\n' + formatedText + '\n'
+
+print(format_page_text('https://devpost.com/software/takeme2'))
+print(format_page_text('https://devpost.com/software/cryptotoken-access-your-credentials-marketplace'))
