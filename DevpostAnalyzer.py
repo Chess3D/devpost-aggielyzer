@@ -7,6 +7,7 @@ website = 'https://devpost.com/software/search?page='
 # Keyword looking to be found
 keyword = "Oh no! Looks like there's no software matching your query."
 
+
 # Checks if the keyword is on the desired page
 def content_check(page):
     html = urllib.request.urlopen(website + str(page)).read()
@@ -18,44 +19,63 @@ def content_check(page):
 
 # Preforms a binary search to find the last page
 def binary_search():    
-    i = 5000
-    currentPage = 1
-    pastPage = currentPage + 1
+    i = 10000
+    currentPage = 0
+    pastPage = i
     state = False
 
     while True:
-
-        while content_check(currentPage) == state:
-            #print('Current Page:',currentPage, '\tPast Page:', pastPage, '\tState:', state)
-            
-            if currentPage == pastPage:
-                return currentPage
-            elif state == True:
-                pastPage = currentPage
-                currentPage -= i
-            else:
-                pastPage = currentPage
-                currentPage += i
-
         state = bool((int(state) + 1) % 2)
         i = i // 2
 
-    return currentPage
+        while content_check(currentPage) == state:        
+            if currentPage == pastPage:
+                return currentPage
+            else:
+                pastPage = currentPage
+
+            if state == True:
+                currentPage -= i
+            else:
+                currentPage += i
 
 
-#print(binary_search())
 
+#pulls text and converts into txt file
 def pull_text(page):
     html = urllib.request.urlopen(website + str(page)).read()
     soup = BeautifulSoup(html, 'html.parser')
     text = soup.get_text()
-    print(text)
+    # print(text)
 
-    pageText = open("PageText.txt","w")
+    pageText = open('PageText.txt','w')
     pageText.write(text)
+    pageText.write('\n')
 
-page = 1
-pull_text(page)
+
+for page in range(2):
+    pull_text(page + 1)
+
+
+def extract_links(page):
+    html = urllib.request.urlopen(website + str(page)).read()
+    soup = BeautifulSoup(html, 'html.parser')
+    tags = soup.findAll('a')
+    keyphrase = "https://devpost.com/software/"
+    linkList = []
+
+    for t in tags:
+        text = t.attrs['href']
+        if text.find(keyphrase) != -1 and text.find('https://devpost.com/software/search?page=') == -1:
+            linkList.append(t.attrs['href'])
+    
+    return linkList
+
+for page in range(2):
+    print(extract_links(page + 1))
+
+    
+
     
 
 # Get the max page count
