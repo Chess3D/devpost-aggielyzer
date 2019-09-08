@@ -1,4 +1,4 @@
-import urllib
+import urllib, re
 from bs4 import BeautifulSoup
 
 # Base website
@@ -7,6 +7,8 @@ website = 'https://devpost.com/software/search?page='
 # Keyphrase looking to be found
 boundsKeyphrase = "Oh no! Looks like there's no software matching your query."
 
+# Keyword being search for
+keyword = input('Enter Search Term:\n')
 
 # Checks if the keyword is on the desired page
 def content_check(page):
@@ -40,23 +42,8 @@ def binary_search():
                 currentPage += i
 
 
-# Pulls text and converts into txt file
-def pull_text(page):
-    html = urllib.request.urlopen(website + str(page)).read()
-    soup = BeautifulSoup(html, 'html.parser')
-    text = soup.get_text()
-
-    pageText = open('PageText.txt','w')
-    pageText.write(text)
-    pageText.write('\n')
-
-
-for page in range(2):
-    pull_text(page + 1)
-
-
 # Gets all the relevant links from each page
-def extract_links(page):
+def extract_link(page):
     html = urllib.request.urlopen(website + str(page)).read()
     soup = BeautifulSoup(html, 'html.parser')
     tags = soup.findAll('a')
@@ -91,43 +78,64 @@ def format_page_text(url):
     return '' + url + '\n' + formatedText + '\n'
 
 
-# Given a word and source file a count of the # of occurrences in stored in an array
-def get_keyword_count(keyword, srcFile):
-    file = open(srcFile, "r")
-    lines = file.readlines()
+# Writes the data to a text file to be analyzed
+def data_to_text():
+    writeFile = open('ProjectText.txt', 'w')
 
-    # Takes the input file and puts every word in its own index
-    for i in lines:
-        words = lines.split(" ")
-
-    # Array format: [ page_description_0, count0, page_description_1, count1, ... ]
-    pageCount = []
-    count = 0
-
-    # If currentWord equals keyWord count is incremented
-    # Else if 'page_description_text' is found in currentWord then it and count are appended to array
-    for currentWord in words:
-        if currentWord.lower() == keyword.lower():
-            count += 1
-        elif 'page_description_text_' in currentWord.lower():
-            pageCount.append(currentWord)
-            pageCount.append(count)
-            count = 0
+    for i in range(40):
+        for url in extract_link(i + 1):
+            try:
+                writeFile.write(format_page_text(url))
+            except:
+                print('Exception: Failed to write a project description to text file')
+    
+    writeFile.close()
 
 
-# Writes text file with the # of occurrences of keyWord in each different project
-def write_keyword_count(keyWord, list):
-    tempDescrip = ''
-    tempCount = 0
-    file = open('KeywordCount.txt', 'w')
+# Gets the number of times the keyword appears
+def keyword_count(text):
+    if text.strip():
+        text = re.sub('[^A-Za-z0-9]+', ' ', text)
+        return text.lower().count(' ' + keyword.lower() + ' ')
+    else:
+        return -1
 
-    # If j is an even number then it indicates a new Project
-    # Else i is count and the info is written to file
-    for i in pageCount and j in range(0, len(list)):
-        if j % 2 == 0 :
-            tempDescrip = i
+
+# Add keywords to a text file
+def keywords_to_text():
+    readFile = open('ProjectText.txt', 'r')
+    writeFile = open('KeywordFrequency.txt', 'w')
+
+    url = ''
+
+    for line in readFile:
+        if line.find('https://devpost.com/software/') != -1:
+            url = line
         else:
-            tempCount = i
-            file.write(tempDescrip, ': ', tempCount, '\n')
+            keywordCount = keyword_count(line)
 
-    file.close()
+            if keywordCount > 0:
+                writeFile.write('Keyword Count: ' + str(keywordCount) + '\t' + url)
+
+    readFile.close()
+    writeFile.close()
+
+
+# Sorts the projects by the frequency the keyword shows up
+def sort_by_frequency():
+    readFile = open('KeywordFrequency.txt', 'r')
+    frequencyList = []
+
+    for line in readFile:
+        frequencyList.append(line)
+    
+    readFile.close
+    frequencyList = sorted(frequencyList, reverse = True)
+    writeFile = open('KeywordFrequency.txt', 'w')
+
+    for line in frequencyList:
+        writeFile.write(line)
+
+
+keywords_to_text()
+sort_by_frequency()
